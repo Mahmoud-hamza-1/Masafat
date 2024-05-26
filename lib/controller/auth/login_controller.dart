@@ -2,6 +2,11 @@ import 'package:ecommerce_application/core/constant/routesname.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../core/class/crud.dart';
+import '../../core/class/statusrequest.dart';
+import '../../data/datasource/remote/auth/login_data.dart';
+import '../../data/handling_data.dart';
+
 abstract class LoginController extends GetxController {
   login();
   goToSignUp();
@@ -14,6 +19,11 @@ class LoginControllerImp extends LoginController {
   late TextEditingController email;
   late TextEditingController password;
   bool isShow = true;
+  StatusRequest statusRequest = StatusRequest.none;
+  LoginData loginData = LoginData(Get.put(Crud()));
+  static var token = '';
+
+
 
   @override
   goToSignUp() {
@@ -21,10 +31,28 @@ class LoginControllerImp extends LoginController {
   }
 
   @override
-  login() {
+  login() async {
     var formData = formState.currentState;
     if (formData!.validate()) {
-      print("valid");
+      statusRequest = StatusRequest.loading;
+      update();
+      var response = await loginData.postData(password.text, email.text);
+      print("=============controller $response");
+      statusRequest = handlingData(response);
+      print('object');
+      print(response);
+      if (StatusRequest.success == statusRequest) {
+        print('fff');
+        if (response['message'] == "Login successful!") {
+          String name = response['data']['name'];
+          token = response['access_token'];
+          print("-------------------------------");
+          print(token);
+          Get.offNamed(AppRoute.successSignUP);
+        }
+        print('no success');
+      }
+      update();
     } else {
       print(" not valid");
     }
